@@ -17,6 +17,19 @@ module Liquid
     REGISTER_KEY = :__liquid_template_recorder
     REPLAYER_REGISTER_KEY = :__liquid_template_recorder_replayer
 
+    # Boot-time gate for the instrumentation hooks.
+    #
+    # The hooks sit on the hottest paths a host application has — every drop
+    # read, filter call, tag and variable — and a host that never records
+    # should not pay for them. Reading a false constant is the cheapest check
+    # available, and Storefront measured the ungated hooks at +1.59%
+    # allocations per request with recording switched off.
+    #
+    # This is deliberately boot-time rather than runtime: a constant is what
+    # makes the disabled path free. Recording is generated offline, so the
+    # processes that need it set this at boot and nothing else pays.
+    HOOKS_ENABLED = !ENV["LIQUID_TEMPLATE_RECORDER_HOOKS"].nil?
+
     # Opening tag markup, with or without whitespace control.
     TAG_NAME_PATTERN = /\{%-?\s*(\w+)/
 
@@ -27,6 +40,9 @@ module Liquid
     class << self
       def record(destination, on_error: nil)
         raise ArgumentError, "a block is required" unless block_given?
+        unless HOOKS_ENABLED
+          raise Error, "recording hooks are disabled; set LIQUID_TEMPLATE_RECORDER_HOOKS before boot"
+        end
 
         previous_session = current
         raise Error, "nested recording sessions are not supported" if previous_session

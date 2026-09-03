@@ -58,7 +58,7 @@ module Liquid
 
       # See Drop#invoke_drop: the context is not guaranteed to be a
       # Liquid::Context, and instrumentation must not raise.
-      if defined?(TemplateRecorder) && @context.respond_to?(:registers)
+      if defined?(TemplateRecorder) && TemplateRecorder::HOOKS_ENABLED && @context.respond_to?(:registers)
         recorder = @context.registers[TemplateRecorder::REGISTER_KEY]
       end
       recorder&.emit_filter_call(method, args.first, args.drop(1), result)

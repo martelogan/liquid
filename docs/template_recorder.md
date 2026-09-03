@@ -5,6 +5,12 @@ replayed without the application's file system or Drop implementations.
 Recording does not wrap or replace assigns, so the recorded render has the same
 semantics as a normal render.
 
+The instrumentation hooks are disabled by default. Set
+`LIQUID_TEMPLATE_RECORDER_HOOKS=1` before the process loads Liquid. This is a
+boot-time setting; changing it after Liquid is loaded has no effect. Calling
+`Liquid::TemplateRecorder.record` while the hooks are disabled raises an error
+instead of silently producing an incomplete recording.
+
 ```ruby
 Liquid::TemplateRecorder.record("render.json") do
   template = Liquid::Template.parse(source)

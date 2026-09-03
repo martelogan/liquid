@@ -84,7 +84,7 @@ module Liquid
 
     # @api private
     def self.render_node(context, output, node)
-      recorder = TemplateRecorder.current
+      recorder = TemplateRecorder::HOOKS_ENABLED ? TemplateRecorder.current : nil
       tag_call = recorder&.begin_tag_render(node, context)
       output_start = output.length
       node.render_to_output_buffer(context, output)

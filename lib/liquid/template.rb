@@ -105,7 +105,9 @@ module Liquid
 
       tokenizer     = parse_context.new_tokenizer(source, start_line_number: @line_numbers && 1)
       @root         = Document.parse(tokenizer, parse_context)
-      @template_recorder_source = source.dup.freeze if defined?(TemplateRecorder) && TemplateRecorder.current
+      if defined?(TemplateRecorder) && TemplateRecorder::HOOKS_ENABLED && TemplateRecorder.current
+        @template_recorder_source = source.dup.freeze
+      end
       self
     end
 
@@ -142,7 +144,9 @@ module Liquid
     def render(*args)
       return '' if @root.nil?
 
-      recording_session = TemplateRecorder.current if defined?(TemplateRecorder)
+      if defined?(TemplateRecorder) && TemplateRecorder::HOOKS_ENABLED
+        recording_session = TemplateRecorder.current
+      end
       recording_assigns = args.first
       context = case args.first
       when Liquid::Context

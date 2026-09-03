@@ -46,7 +46,7 @@ module Liquid
       # A host application may assign its own object as a drop's context, and a
       # drop can be invoked outside any render. Neither case has registers, and
       # instrumentation must never turn either into a NoMethodError.
-      if defined?(TemplateRecorder) && @context.respond_to?(:registers)
+      if defined?(TemplateRecorder) && TemplateRecorder::HOOKS_ENABLED && @context.respond_to?(:registers)
         recorder = @context.registers[TemplateRecorder::REGISTER_KEY]
       end
       recorder&.emit_drop_read(self, method_or_key, result)
