@@ -112,6 +112,19 @@ class TemplateRecorderTest < Minitest::Test
     assert_equal(output, Liquid::TemplateRecorder.replay_from(path, mode: :verify).render)
   end
 
+  def test_recording_restores_the_callers_error_mode_after_rendering
+    context = Liquid::Context.new([{ "value" => "recorded" }])
+    context.registers.static[:template_error_mode] = :lax
+
+    output = Liquid::TemplateRecorder.record(path) do
+      Liquid::Template.parse("{{ value }}", error_mode: :strict2).render!(context)
+    end
+
+    assert_equal("recorded", output)
+    assert_equal(:lax, context.registers.static[:template_error_mode])
+    assert_equal(output, Liquid::TemplateRecorder.replay_from(path, mode: :verify).render)
+  end
+
   def test_jsonl_appends_one_self_contained_record_per_render
     recording = path("renders.jsonl")
 

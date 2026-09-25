@@ -210,6 +210,9 @@ module Liquid
       # recording must describe only what the template rendered, so remember
       # where its output starts.
       recorded_output_start = recording ? (output || '').bytesize : 0
+      previous_error_mode = context.registers.static[:template_error_mode]
+      context.registers.static[:template_error_mode] = @error_mode
+
       begin
         # render the nodelist.
         rendered_output = @root.render_to_output_buffer(context, output || +'')
@@ -224,6 +227,11 @@ module Liquid
         recorded_output_start = 0
         rendered_output
       ensure
+        if previous_error_mode
+          context.registers.static[:template_error_mode] = previous_error_mode
+        else
+          context.registers.static.delete(:template_error_mode)
+        end
         if recording
           if previous_recorder
             recorder_registers[TemplateRecorder::REGISTER_KEY] = previous_recorder
@@ -271,6 +279,7 @@ module Liquid
       end
 
       @warnings = parse_context.warnings
+      @error_mode = parse_context.error_mode
       parse_context
     end
 
